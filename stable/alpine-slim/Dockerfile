@@ -3,7 +3,11 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.20
+
+ARG BASE_REGISTRY=201959883603.dkr.ecr.us-east-2.amazonaws.com
+ARG BASE_IMAGE=mdaca/base-images/ironbank-alpine
+ARG BASE_TAG=3.20.2
+FROM ${BASE_REGISTRY}/${BASE_IMAGE}:${BASE_TAG}
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
@@ -107,17 +111,21 @@ RUN set -x \
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
 # create a docker-entrypoint.d directory
-    && mkdir /docker-entrypoint.d
+    && mkdir /docker-entrypoint.d \
+    && chown -R nginx:nginx /var/cache/nginx /etc/nginx /usr/share/nginx /run /var/log/nginx || true
 
-COPY docker-entrypoint.sh /
-COPY 10-listen-on-ipv6-by-default.sh /docker-entrypoint.d
-COPY 15-local-resolvers.envsh /docker-entrypoint.d
-COPY 20-envsubst-on-templates.sh /docker-entrypoint.d
-COPY 30-tune-worker-processes.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx docker-entrypoint.sh /
+COPY --chown=nginx:nginx 10-listen-on-ipv6-by-default.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx 15-local-resolvers.envsh /docker-entrypoint.d
+COPY --chown=nginx:nginx 20-envsubst-on-templates.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx 30-tune-worker-processes.sh /docker-entrypoint.d
+
+USER nginx
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 80
-
+EXPOSE 8080
 STOPSIGNAL SIGQUIT
 
 CMD ["nginx", "-g", "daemon off;"]
