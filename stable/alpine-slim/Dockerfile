@@ -114,11 +114,11 @@ RUN set -x \
     && mkdir /docker-entrypoint.d \
     && chown -R nginx:nginx /var/cache/nginx /etc/nginx /usr/share/nginx /run /var/log/nginx || true
 
-COPY --chown=nginx:nginx docker-entrypoint.sh /
-COPY --chown=nginx:nginx 10-listen-on-ipv6-by-default.sh /docker-entrypoint.d
-COPY --chown=nginx:nginx 15-local-resolvers.envsh /docker-entrypoint.d
-COPY --chown=nginx:nginx 20-envsubst-on-templates.sh /docker-entrypoint.d
-COPY --chown=nginx:nginx 30-tune-worker-processes.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx stable/alpine-slim/docker-entrypoint.sh /
+COPY --chown=nginx:nginx stable/alpine-slim/10-listen-on-ipv6-by-default.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx stable/alpine-slim/15-local-resolvers.envsh /docker-entrypoint.d
+COPY --chown=nginx:nginx stable/alpine-slim/20-envsubst-on-templates.sh /docker-entrypoint.d
+COPY --chown=nginx:nginx stable/alpine-slim/30-tune-worker-processes.sh /docker-entrypoint.d
 
 USER nginx
 
