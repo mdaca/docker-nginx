@@ -1,0 +1,47 @@
+name: Build Nginx slim on Alpine 
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Debug Variable Values
+        run: |
+          echo "IMAGE_TAG=${{ secrets.IMAGE_TAG }}"
+          echo "REPOSITORY=${{ secrets.ECR_REPOSITORY }}"
+          echo "REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com"
+
+      - name: Build and Push Docker Image
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          IMAGE_TAG: 1.26.2_3.20.2
+          ECR_REPOSITORY: mdaca/base-images/ironbank-alpine-nginx
+        run: |
+          # Set ENV for AW Cred
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set default.region $AWS_REGION
+       
+          # Get token from ECR and Docker login
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+          IMAGE_TAG=3.20.2_jdk17
+ 
+          # Set ENV for Docker build
+          ECR_REPOSITORY=mdaca/base-images/ironbank-alpine-nginx
+          REPOSITORY=$ECR_REPOSITORY
+          REGISTRY=201959883603.dkr.ecr.us-east-2.amazonaws.com
+
+          # Build the Docker image
+          docker build -f stable/alpine-slim/Dockerfile -t $REGISTRY/$REPOSITORY:$IMAGE_TAG stable/alpine-slim
+
+          # Push the Docker image
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
